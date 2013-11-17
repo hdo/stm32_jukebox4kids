@@ -80,7 +80,7 @@ void Delay(__IO uint32_t nCount) {
 }
 
 void get_playlist_file_for(uint32_t lst_id, char* name) {
-	strcpy(name, "/index/");
+	strcpy(name, "/index/rfid/");
 	if (lst_id == 1) {
 		strcat(name, "6083044.lst");
 	}
@@ -251,7 +251,6 @@ int main(void) {
 	uart_sendStringln(USE_UART_PORT_NUM, "done ...");
 
 
-	/*
 
 	lcdfront_init();
 	lcdfront_string(version_get_product_name());
@@ -267,9 +266,8 @@ int main(void) {
     uart_sendNumber(USE_UART_PORT_NUM, (msTicks - stopwatch_a));
     uart_sendStringln(USE_UART_PORT_NUM, "0ms");
 
-*/
 
-	uint8_t mp3_buf[32];
+	uint8_t mp3_buf[128];
 	uint32_t bytes_read = 0;
 	uint32_t stopwatch_b = msTicks;
 	interval = stopwatch_b - stopwatch_a;
@@ -317,7 +315,7 @@ int main(void) {
 	file_exists("0:/media/001. Avicii - Wake Me Up2.mp3");
 	file_exists("/media/Wieso Weshalb Warum/30-Alles über den Zirkus/05 - Wie kommt der Zirkus in die Stadt und wie wird ein Zirkuszelt aufgebaut.mp3");
 	file_exists("/media/Wieso Weshalb Warum/30-Alles über den Zirkus/29 - Ich bin ganz Ohr (instrumental).mp3");
-	file_exists("/media/Detlev Joecker/Sei gegrüßt lieber Nikolaus [2001]/64 - Was kann in diesen Tagen.mp3	");
+	file_exists("/media/Detlev Joecker/Sei gegrüßt lieber Nikolaus [2001]/64 - Was kann in diesen Tagen.mp3");
 
 	GPIOD->BSRRL = GPIO_Pin_12; // set green
 	GPIOD->BSRRH = GPIO_Pin_14; // clear red
@@ -326,16 +324,13 @@ int main(void) {
 	while (1) {
 
 
-		USBH_Process(&USB_OTG_Core, &USB_Host);
+		//USBH_Process(&USB_OTG_Core, &USB_Host);
 
 
-		/*
 		if ((play_mode == MODE_PLAY) && (file_status == FILE_OK) && (decoder_status == VS_STATUS_OK) && (IS_DREQ_HIGH)) {
 			GPIOD->BSRRL = GPIO_Pin_15;
 
-			f_read(&audioFile, mp3_buf, 32, (UINT*) &bytes_read);
-
-			//f_read(&file, file_read_buffer, FILE_READ_BUFFER_SIZE, &br);
+			f_read(&audioFile, mp3_buf, 32, &bytes_read);
 
 			if (bytes_read > 0) {
 				vs_send_32(mp3_buf, bytes_read);
@@ -343,6 +338,8 @@ int main(void) {
 			GPIOD->BSRRH = GPIO_Pin_15;
 			// aussume file has end, so play next song
 			if (bytes_read == 0 && math_calc_diff(msTicks, last_auto_track_change) > 30) {
+				uart_sendStringln(USE_UART_PORT_NUM, "next_track");
+
 				// lock auto track change for 300ms
 				last_auto_track_change = msTicks;
 				command_next_track();
@@ -421,8 +418,6 @@ int main(void) {
 							if (tcount > 0) {
 								char fname[MAX_PATH_LENGTH];
 								lst_get_item_at(0, fname, MAX_PATH_LENGTH);
-
-
 
 
 								if (f_open(&lstFile, fname, FA_OPEN_EXISTING | FA_READ) == FR_OK) {
@@ -571,6 +566,5 @@ int main(void) {
 			}
 			UART1Count = 0;
 		}
-		*/
 	}
 }

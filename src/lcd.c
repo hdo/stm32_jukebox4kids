@@ -12,8 +12,8 @@
 
 #define LCD_PORT GPIOB
 #define LCD_PORT_RCC RCC_AHB1Periph_GPIOB
-#define LCD_PIN_E  GPIO_Pin_10
-#define LCD_PIN_RS GPIO_Pin_11
+#define LCD_PIN_RS GPIO_Pin_10
+#define LCD_PIN_E  GPIO_Pin_11
 #define LCD_PIN_D4 GPIO_Pin_12
 #define LCD_PIN_D5 GPIO_Pin_13
 #define LCD_PIN_D6 GPIO_Pin_14
