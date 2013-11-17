@@ -162,6 +162,19 @@ void command_vol_down() {
 	rotary_set_value(rotary_get_value()+5);
 }
 
+uint8_t file_exists(char* name) {
+	uart_sendString(USE_UART_PORT_NUM, "file_exists: ");
+	uart_sendStringln(USE_UART_PORT_NUM, name);
+	FIL testFile;
+	if (f_open(&testFile, name, FA_OPEN_EXISTING | FA_READ) == FR_OK) {
+		f_close(&testFile);
+		uart_sendStringln(USE_UART_PORT_NUM, "ok");
+		return 1;
+	}
+	uart_sendStringln(USE_UART_PORT_NUM, "failed");
+	return 0;
+}
+
 int main(void) {
 
 	uint8_t file_status = FILE_FAIL;
@@ -299,6 +312,12 @@ int main(void) {
 	else {
 		uart_sendStringln(USE_UART_PORT_NUM, "error opening file!");
 	}
+
+	file_exists("0:/media/001. Avicii - Wake Me Up.mp3");
+	file_exists("0:/media/001. Avicii - Wake Me Up2.mp3");
+	file_exists("/media/Wieso Weshalb Warum/30-Alles über den Zirkus/05 - Wie kommt der Zirkus in die Stadt und wie wird ein Zirkuszelt aufgebaut.mp3");
+	file_exists("/media/Wieso Weshalb Warum/30-Alles über den Zirkus/29 - Ich bin ganz Ohr (instrumental).mp3");
+	file_exists("/media/Detlev Joecker/Sei gegrüßt lieber Nikolaus [2001]/64 - Was kann in diesen Tagen.mp3	");
 
 	GPIOD->BSRRL = GPIO_Pin_12; // set green
 	GPIOD->BSRRH = GPIO_Pin_14; // clear red
