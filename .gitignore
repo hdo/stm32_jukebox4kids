@@ -1,0 +1,9 @@
+Debug/
+Debug/**/* 
+*.launch
+*.bin
+*.hex
+*.elf
+*.a
+*.o
+build/

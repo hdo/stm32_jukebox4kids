@@ -1,0 +1,30 @@
+<project name="STM32F4_JUKEBOX" default="compile" basedir="..">
+    <description>
+        simple example build file
+    </description>
+
+  <!-- set global properties for this build -->
+  <property name="src" location="src"/>
+  <property name="build" location="build"/>
+  <property name="dist"  location="dist"/>
+
+
+  <target name="compile" description="compile the source " >
+	<exec dir="." executable="/usr/bin/make">        
+    </exec>         
+  </target>
+
+
+  <target name="flash" depends="compile" description="flash image to device" >
+	<exec dir="." executable="/usr/bin/make">        
+		<arg value="flash"/> 	
+    </exec>         
+  </target>
+
+  <target name="clean" description="clean up" >
+	<exec dir="." executable="/usr/bin/make">        
+		<arg value="clean"/> 	
+    </exec>         
+  </target>
+
+</project>

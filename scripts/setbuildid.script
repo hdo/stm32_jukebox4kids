@@ -1,0 +1,1 @@
+sed -i "s/#define\ VERSION_BUILD_ID.*$/#define\ VERSION_BUILD_ID \"`date +"%Y%m%d-%H%M%S"`\"/g" ../src/version.c
