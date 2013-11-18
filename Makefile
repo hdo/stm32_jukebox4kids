@@ -1,7 +1,7 @@
 include ./Makefile.common
 
 # Sources
-SRCS = buttons.c lcdfront.c math_utils.c relay.c uart.c buzzer.c logger.c numpad.c rotary.c version.c delay.c lst_handler.c queue.c vs1033.c lcd.c main.c rdm630.c system_stm32f4xx.c stm32f4xx_it.c syscalls.c usb_bsp.c usbh_usr.c
+SRCS = buttons.c lcdfront.c math_utils.c relay.c uart.c buzzer.c logger.c numpad.c rotary.c version.c delay.c lst_handler.c queue.c vs1033.c lcd.c main.c rdm630.c system_stm32f4xx.c stm32f4xx_it.c syscalls.c usb_bsp.c usbh_usr.c audio.c
 #SRCS = $(wildcard *.c)
 
 # Project name
