@@ -64,11 +64,12 @@ $(OUTPATH)/$(PROJ_NAME).elf: $(SRCS)
 
 flash: all
 	$(FLASH_EXEC) $(OUTPATH)/$(PROJ_NAME).hex 0x8000000
+
+cleanlibs:
+	$(MAKE) clean -C lib # Remove this line if you don't want to clean the libs as well
 	
 clean:
 	rm -f *.o
 	rm -f $(OUTPATH)/$(PROJ_NAME).elf
 	rm -f $(OUTPATH)/$(PROJ_NAME).hex
 	rm -f $(OUTPATH)/$(PROJ_NAME).bin
-	$(MAKE) clean -C lib # Remove this line if you don't want to clean the libs as well
-	
