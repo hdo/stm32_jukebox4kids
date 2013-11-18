@@ -11,5 +11,7 @@ void lcd_command(uint8_t data);
 void lcd_data(uint8_t data);
 void lcd_setcursor(uint8_t x, uint8_t y);
 void lcd_string(const char *data);
+void lcd_display_on();
+void lcd_display_off();
 
 #endif /* end __LCD_H */

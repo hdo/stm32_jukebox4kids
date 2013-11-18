@@ -269,3 +269,12 @@ void lcd_string(const char *data) {
     while( *data != '\0' )
         lcd_data( *data++ );
 }
+
+void lcd_display_on() {
+	lcd_command(LCD_SET_DISPLAY | LCD_DISPLAY_ON | LCD_CURSOR_OFF | LCD_BLINKING_OFF);
+}
+
+void lcd_display_off() {
+	lcd_command(LCD_SET_DISPLAY | LCD_DISPLAY_OFF | LCD_CURSOR_OFF | LCD_BLINKING_OFF);
+}
+

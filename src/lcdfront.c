@@ -189,6 +189,9 @@ uint16_t vol_current = 0;
 uint16_t vol_max = 0;
 uint16_t track_current = 0;
 uint16_t track_max = 0;
+uint32_t last_blink_action = 0;
+uint8_t flag_blink_mode = 0;
+uint8_t flag_current_display_mode = 1;
 
 
 void lcdfront_setCustomChar(uint8_t address, uint8_t * dataArray) {
@@ -492,8 +495,41 @@ void lcdfront_string(const char *data) {
 }
 
 void lcdfront_process(uint32_t ms_ticks) {
+	lcdfront_msticks = ms_ticks;
+
 	if (last_display != LAST_DISPLAY_TRACKINFO && math_calc_diff(ms_ticks, last_display_msticks) > DISPLAY_TIME_OUT) {
 		lcdfront_trackinfo(track_current, track_max);
 	}
-	lcdfront_msticks = ms_ticks;
+
+	if (flag_blink_mode && math_calc_diff(ms_ticks, last_blink_action) > 50) {
+		if (flag_current_display_mode) {
+			lcdfront_set_display(0);
+		}
+		else {
+			lcdfront_set_display(1);
+		}
+		last_blink_action = ms_ticks;
+	}
+
+}
+
+void lcdfront_set_blink(uint8_t flag) {
+	if (flag) {
+		flag_blink_mode = 1;
+	}
+	else {
+		flag_blink_mode = 0;
+		lcdfront_set_display(1);
+	}
+}
+
+void lcdfront_set_display(uint8_t flag) {
+	if (flag) {
+		lcd_display_on();
+		flag_current_display_mode = 1;
+	}
+	else {
+		lcd_display_off();
+		flag_current_display_mode = 0;
+	}
 }
