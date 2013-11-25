@@ -328,12 +328,8 @@ int main(void) {
     uart_sendString(USE_UART_PORT_NUM, "done: ");
     uart_sendNumber(USE_UART_PORT_NUM, (msTicks - stopwatch_a));
     uart_sendStringln(USE_UART_PORT_NUM, "0ms");
-    uart_sendStringln(USE_UART_PORT_NUM, "activating amp ...");
-    relay_set(0);
 
 
-	uint8_t mp3_buf[32];
-	uint32_t bytes_read = 0;
 	uint32_t stopwatch_b = msTicks;
 	interval = stopwatch_b - stopwatch_a;
 	uint8_t volume = audio_get_volume();
@@ -352,10 +348,16 @@ int main(void) {
 		USBH_Process(&USB_OTG_Core, &USB_Host);
 	}
 
+
 	interval = msTicks - stopwatch_a;
 	uart_sendString(USE_UART_PORT_NUM, "mounting usb took ");
 	uart_sendNumber(USE_UART_PORT_NUM, interval);
 	uart_sendStringln(USE_UART_PORT_NUM, "0 ms");
+
+    uart_sendStringln(USE_UART_PORT_NUM, "activating amp ...");
+
+	relay_set(0);
+	relay_reset(1);
 
 	load_playlist("/index/boot.lst");
 	audio_pause();

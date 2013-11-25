@@ -14,6 +14,8 @@ void relay_init(void) {
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
 	GPIO_Init(RELAY_GPIO_PORT, &GPIO_InitStructure);
+
+	GPIO_SetBits(RELAY_GPIO_PORT, RELAY_CHANNEL_0 | RELAY_CHANNEL_1);
 }
 
 void relay_process(uint32_t msticks) {
