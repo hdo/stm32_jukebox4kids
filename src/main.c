@@ -119,6 +119,7 @@ void command_toggle_play() {
 		if (current_track == 0 && lst_get_trackcount() > 0) {
 			uart_sendStringln(USE_UART_PORT_NUM, "start from beginning");
 			next_track = 1;
+			lcdfront_trackinfo(next_track, lst_get_trackcount());
 		}
 	}
 }
@@ -202,7 +203,7 @@ void load_playlist(char* lstName) {
 						audio_stop();
 						audio_play_file(fname);
 
-						lcdfront_trackinfo(next_track, tcount);
+						lcdfront_trackinfo(current_track, tcount);
 					}
 				}
 			}
@@ -290,7 +291,6 @@ int main(void) {
 
 	buttons_init();
 	relay_init();
-	relay_set(0);
 
 	rdm630_init();
 	rdm630_reset();
@@ -322,13 +322,14 @@ int main(void) {
 	lcdfront_string(version_get_product_name());
 	lcdfront_setcursor(0, 1);
 	lcdfront_string(version_get_build_id());
-	delay_ms(1000);
 
     uart_sendStringln(USE_UART_PORT_NUM, "initialising audio ...");
     audio_init();
     uart_sendString(USE_UART_PORT_NUM, "done: ");
     uart_sendNumber(USE_UART_PORT_NUM, (msTicks - stopwatch_a));
     uart_sendStringln(USE_UART_PORT_NUM, "0ms");
+    uart_sendStringln(USE_UART_PORT_NUM, "activating amp ...");
+    relay_set(0);
 
 
 	uint8_t mp3_buf[32];
@@ -356,12 +357,6 @@ int main(void) {
 	uart_sendNumber(USE_UART_PORT_NUM, interval);
 	uart_sendStringln(USE_UART_PORT_NUM, "0 ms");
 
-	file_exists("0:/media/001. Avicii - Wake Me Up.mp3");
-	file_exists("0:/media/001. Avicii - Wake Me Up2.mp3");
-	file_exists("/media/Wieso Weshalb Warum/30-Alles über den Zirkus/05 - Wie kommt der Zirkus in die Stadt und wie wird ein Zirkuszelt aufgebaut.mp3");
-	file_exists("/media/Wieso Weshalb Warum/30-Alles über den Zirkus/29 - Ich bin ganz Ohr (instrumental).mp3");
-	file_exists("/media/Detlev Joecker/Sei gegrüßt lieber Nikolaus [2001]/64 - Was kann in diesen Tagen.mp3");
-
 	load_playlist("/index/boot.lst");
 	audio_pause();
 	lcdfront_trackinfo(current_track, lst_get_trackcount());
@@ -380,9 +375,10 @@ int main(void) {
 
 		uint8_t audio_status = audio_get_status();
 
-		// auto next track check
-		if (audio_status == AUDIO_STATUS_FINISHED) {
+		// auto next track check (check only every 500ms)
+		if (audio_status == AUDIO_STATUS_FINISHED && math_calc_diff(msTicks, last_auto_track_change) > 50) {
 			if (current_track < lst_get_trackcount()) {
+				last_auto_track_change = msTicks;
 				command_next_track();
 			}
 			else {

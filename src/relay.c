@@ -20,7 +20,7 @@ void relay_process(uint32_t msticks) {
 
 }
 
-void relay_set(uint8_t channel) {
+void relay_reset(uint8_t channel) {
 	if (channel == 0) {
 		GPIO_SetBits(RELAY_GPIO_PORT, RELAY_CHANNEL_0);
 	}
@@ -29,7 +29,7 @@ void relay_set(uint8_t channel) {
 	}
 }
 
-void relay_reset(uint8_t channel) {
+void relay_set(uint8_t channel) {
 	if (channel == 0) {
 		GPIO_ResetBits(RELAY_GPIO_PORT, RELAY_CHANNEL_0);
 	}
