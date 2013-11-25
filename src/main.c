@@ -112,10 +112,13 @@ void command_toggle_play() {
 	if (audio_get_status() == AUDIO_STATUS_PLAYING) {
 		audio_pause();
 		uart_sendStringln(USE_UART_PORT_NUM, "pause");
+		lcdfront_set_blink(1);
 	} else 	if (audio_get_status() == AUDIO_STATUS_PAUSED) {
 		audio_resume();
 		uart_sendStringln(USE_UART_PORT_NUM, "play");
+		lcdfront_set_blink(0);
 	} else if (audio_get_status() == AUDIO_STATUS_STOPPED) {
+		lcdfront_set_blink(0);
 		if (current_track == 0 && lst_get_trackcount() > 0) {
 			uart_sendStringln(USE_UART_PORT_NUM, "start from beginning");
 			next_track = 1;
