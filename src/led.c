@@ -20,10 +20,12 @@ void led_init(void) {
 	GPIO_InitStructure.GPIO_Pin = (LED_CHANNEL_0_PIN | LED_CHANNEL_1_PIN | LED_CHANNEL_2_PIN
 			| LED_CHANNEL_3_PIN | LED_CHANNEL_4_PIN
 			| LED_CHANNEL_5_PIN | LED_CHANNEL_6_PIN);
+
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+
 	GPIO_Init(LED_GPIO_PORT, &GPIO_InitStructure);
 
 	// clear all

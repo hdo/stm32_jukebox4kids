@@ -271,6 +271,8 @@ int main(void) {
 	}
 
 	delay_init();
+	led_init();
+
 
 	/* GPIOD Periph clock enable */
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
