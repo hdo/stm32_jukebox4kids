@@ -4,8 +4,8 @@
 
 #define RELAY_RCC RCC_AHB1Periph_GPIOE
 #define RELAY_GPIO_PORT GPIOE
-#define RELAY_CHANNEL_0 GPIO_Pin_0
-#define RELAY_CHANNEL_1 GPIO_Pin_1
+#define RELAY_CHANNEL_0_PIN GPIO_Pin_0
+#define RELAY_CHANNEL_1_PIN GPIO_Pin_1
 
 void relay_init(void);
 void relay_process(uint32_t msticks);

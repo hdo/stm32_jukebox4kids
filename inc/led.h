@@ -20,7 +20,7 @@
 #define LED_GREEN     5 // led green
 #define LED_BLUE      6 // blue
 
-void led_init(void);
+void led_init();
 void led_process(uint32_t msticks);
 void led_on(uint8_t channel);
 void led_off(uint8_t channel);

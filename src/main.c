@@ -31,6 +31,13 @@
 
 #define WAIT_TIME_CHANGE_TRACK 25
 
+#define PM_MODE_OFF 1
+#define PM_MODE_ON 2
+#define PM_MODE_STAND_BY 3
+
+#define STAND_BY_TIMEOUT 9000 // 90 seconds
+
+
 extern volatile uint32_t UART1Count, UART2Count, UART3Count;
 extern volatile uint8_t UART1Buffer[UART_BUFSIZE], UART2Buffer[UART_BUFSIZE], UART3Buffer[UART_BUFSIZE];
 volatile uint32_t msTicks; // counter for 10ms SysTicks
@@ -43,13 +50,15 @@ volatile int			enum_done = 0;
 // USB END
 
 
-
+uint8_t pm_mode = PM_MODE_OFF;
 uint32_t current_playlist, next_playlist = 0;
 uint16_t current_track, next_track = 0; // 1 based
 uint32_t last_track_change = 0;
 uint32_t last_auto_track_change = 0;
 uint32_t last_check_volume = 0;
 uint32_t last_vs_health_check = 0;
+uint32_t last_1second_msticks = 0;
+uint32_t last_active_msticks = 0; // for auto power-off
 
 uint8_t path[MAX_PATH_LENGTH];
 char current_playlist_name[MAX_PATH_LENGTH];
@@ -140,6 +149,21 @@ void command_vol_down() {
 	if (rotary_get_value() >= 5) {
 		rotary_set_value(rotary_get_value()-5);
 	}
+}
+
+void command_go_standby() {
+	pm_mode = PM_MODE_STAND_BY;
+	audio_pause();
+	led_off(LED_GREEN);
+	led_off(LED_BLUE);
+	led_on(LED_RED);
+}
+
+void command_wake_up() {
+	pm_mode = PM_MODE_ON;
+	led_off(LED_RED);
+	led_off(LED_BLUE);
+	led_on(LED_GREEN);
 }
 
 uint8_t file_exists(char* name) {
@@ -256,6 +280,8 @@ void load_playlist_for_uartid(uint32_t value) {
 }
 
 
+
+
 int main(void) {
 
 	SystemInit(); // Quarz Einstellungen aktivieren
@@ -273,30 +299,14 @@ int main(void) {
 	delay_init();
 	led_init();
 
+	led_on(LED_RED);
 
-	/* GPIOD Periph clock enable */
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
-
-	GPIO_InitTypeDef GPIO_InitStructure;
-
-	/* Configure PD12, 13, 14 and PD15 in output pushpull mode */
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14
-			| GPIO_Pin_15;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_Init(GPIOD, &GPIO_InitStructure);
-
-	GPIOD->BSRRL = GPIO_Pin_14; // set red
-	GPIOD->BSRRH = GPIO_Pin_12; // clear green
+	buttons_init();
+	relay_init();
 
 	rotary_init();
 	rotary_set_boundary(0, 150);
 	rotary_set_value(audio_get_volume());
-
-	buttons_init();
-	relay_init();
 
 	rdm630_init();
 	rdm630_reset();
@@ -354,6 +364,9 @@ int main(void) {
 		USBH_Process(&USB_OTG_Core, &USB_Host);
 	}
 
+	led_off(LED_RED);
+	led_on(LED_GREEN);
+	pm_mode = PM_MODE_ON;
 
 	interval = msTicks - stopwatch_a;
 	uart_sendString(USE_UART_PORT_NUM, "mounting usb took ");
@@ -369,9 +382,6 @@ int main(void) {
 	audio_pause();
 	lcdfront_trackinfo(current_track, lst_get_trackcount());
 
-	GPIOD->BSRRL = GPIO_Pin_12; // set green
-	GPIOD->BSRRH = GPIO_Pin_14; // clear red
-
 	while (1) {
 
 		/* the following line causes f_read to read 0 bytes */
@@ -384,82 +394,112 @@ int main(void) {
 
 		uint8_t audio_status = audio_get_status();
 
-		// auto next track check (check only every 500ms)
-		if (audio_status == AUDIO_STATUS_FINISHED && math_calc_diff(msTicks, last_auto_track_change) > 50) {
-			if (current_track < lst_get_trackcount()) {
-				last_auto_track_change = msTicks;
+		if (buttons_triggered(BUTTON_ON_OFF)) {
+			last_active_msticks = msTicks;
+			uart_sendStringln(USE_UART_PORT_NUM, "on/off");
+			if (pm_mode == PM_MODE_ON) {
+				command_go_standby();
+			}
+			else if (pm_mode == PM_MODE_STAND_BY) {
+				command_wake_up();
+			}
+
+		}
+
+		// process if jukebox is on
+		if (pm_mode == PM_MODE_ON) {
+
+			// auto next track check (check only every 500ms)
+			if (audio_status == AUDIO_STATUS_FINISHED && math_calc_diff(msTicks, last_auto_track_change) > 50) {
+				if (current_track < lst_get_trackcount()) {
+					last_auto_track_change = msTicks;
+					command_next_track();
+				}
+				else {
+					// reached end of playlist
+					audio_stop();
+					current_track = 0;
+					next_track = 0;
+					lcdfront_trackinfo(current_track, lst_get_trackcount());
+				}
+			}
+
+			if (buttons_triggered(BUTTON_PLAY_PAUSE)) {
+				last_active_msticks = msTicks;
+				uart_sendStringln(USE_UART_PORT_NUM, "play/pause");
+				command_toggle_play();
+			}
+
+			if (buttons_triggered(BUTTON_PREV)) {
+				last_active_msticks = msTicks;
+				uart_sendStringln(USE_UART_PORT_NUM, "prev track");
+				command_prev_track();
+			}
+
+			if (buttons_triggered(BUTTON_NEXT)) {
+				last_active_msticks = msTicks;
+				uart_sendStringln(USE_UART_PORT_NUM, "next track");
 				command_next_track();
 			}
-			else {
-				// reached end of playlist
-				audio_stop();
-				current_track = 0;
+
+			if (buttons_triggered(BUTTON_VOLUME)) {
+				last_active_msticks = msTicks;
+				uart_sendStringln(USE_UART_PORT_NUM, "volume button");
+			}
+
+			if (next_track != 0 && next_track != current_track && math_calc_diff(msTicks, last_track_change) > WAIT_TIME_CHANGE_TRACK) {
+				char fname[MAX_PATH_LENGTH];
+				// -1 due next_track and current_track is 1 based
+				lst_get_item_at(next_track - 1, fname, MAX_PATH_LENGTH);
+				uart_sendString(USE_UART_PORT_NUM, "loading file: ");
+				uart_sendStringln(USE_UART_PORT_NUM, fname);
+
+				if (file_exists(fname)) {
+					audio_stop();
+					audio_play_file(fname);
+					current_track = next_track;
+				}
 				next_track = 0;
-				lcdfront_trackinfo(current_track, lst_get_trackcount());
+			}
+
+			// check vs health every 1 second
+			if (PERFORM_VS_HEALTH_CHECK && math_calc_diff(msTicks, last_vs_health_check) > 100) {
+				last_vs_health_check = msTicks;
+				uart_sendStringln(USE_UART_PORT_NUM, "vs health check");
+				vs_health_check();
+			}
+
+			// check volume settings every x0ms
+			if (math_calc_diff(msTicks, last_check_volume) > 10) {
+				last_check_volume = msTicks;
+				if (volume != rotary_get_value()) {
+					last_active_msticks = msTicks;
+					volume = rotary_get_value();
+					uart_sendString(USE_UART_PORT_NUM, "set volume: ");
+					uart_sendNumberln(USE_UART_PORT_NUM, volume);
+					vs_set_simple_volume(volume);
+					lcdfront_volume(volume, 150);
+				}
+			}
+
+			if (rdm630_data_available()) {
+				uart_sendNumberln(USE_UART_PORT_NUM, rdm630_read_rfid_id());
+				load_playlist_for_rfid(rdm630_read_rfid_id());
+				rdm630_reset();
+				led_signal(LED_BLUE, 50);
 			}
 		}
 
-		if (buttons_triggered(BUTTON_ON_OFF)) {
-			uart_sendStringln(USE_UART_PORT_NUM, "on/off");
-		}
-
-		if (buttons_triggered(BUTTON_PLAY_PAUSE)) {
-			uart_sendStringln(USE_UART_PORT_NUM, "play/pause");
-			command_toggle_play();
-		}
-
-		if (buttons_triggered(BUTTON_PREV)) {
-			uart_sendStringln(USE_UART_PORT_NUM, "prev track");
-			command_prev_track();
-		}
-
-		if (buttons_triggered(BUTTON_NEXT)) {
-			uart_sendStringln(USE_UART_PORT_NUM, "next track");
-			command_next_track();
-		}
-
-		if (buttons_triggered(BUTTON_VOLUME)) {
-			uart_sendStringln(USE_UART_PORT_NUM, "volume button");
-		}
-
-		if (next_track != 0 && next_track != current_track && math_calc_diff(msTicks, last_track_change) > WAIT_TIME_CHANGE_TRACK) {
-			char fname[MAX_PATH_LENGTH];
-			// -1 due next_track and current_track is 1 based
-			lst_get_item_at(next_track - 1, fname, MAX_PATH_LENGTH);
-			uart_sendString(USE_UART_PORT_NUM, "loading file: ");
-			uart_sendStringln(USE_UART_PORT_NUM, fname);
-
-			if (file_exists(fname)) {
-				audio_stop();
-				audio_play_file(fname);
-				current_track = next_track;
+		// process every second
+		if (math_calc_diff(msTicks, last_1second_msticks) > 100) {
+			last_1second_msticks = msTicks;
+			if (audio_status == AUDIO_STATUS_PLAYING) {
+				last_active_msticks = msTicks;
 			}
-			next_track = 0;
-		}
 
-		// check vs health every 1 second
-		if (PERFORM_VS_HEALTH_CHECK && math_calc_diff(msTicks, last_vs_health_check) > 100) {
-			last_vs_health_check = msTicks;
-			uart_sendStringln(USE_UART_PORT_NUM, "vs health check");
-			vs_health_check();
-		}
-
-		// check volume settings every x0ms
-		if (math_calc_diff(msTicks, last_check_volume) > 10) {
-			last_check_volume = msTicks;
-			if (volume != rotary_get_value()) {
-				volume = rotary_get_value();
-				uart_sendString(USE_UART_PORT_NUM, "set volume: ");
-				uart_sendNumberln(USE_UART_PORT_NUM, volume);
-				vs_set_simple_volume(volume);
-				lcdfront_volume(volume, 150);
+			if (pm_mode == PM_MODE_ON && math_calc_diff(msTicks, last_active_msticks) > STAND_BY_TIMEOUT) {
+				command_go_standby();
 			}
-		}
-
-		if (rdm630_data_available()) {
-			uart_sendNumberln(USE_UART_PORT_NUM, rdm630_read_rfid_id());
-			load_playlist_for_rfid(rdm630_read_rfid_id());
-			rdm630_reset();
 		}
 
 		if (UART3Count > 0) {

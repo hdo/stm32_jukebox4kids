@@ -3,7 +3,7 @@
 #include "led.h"
 #include "math_utils.h"
 
-uint16_t led_map = {LED_CHANNEL_0_PIN, LED_CHANNEL_1_PIN, LED_CHANNEL_2_PIN,
+uint16_t led_map[] = {LED_CHANNEL_0_PIN, LED_CHANNEL_1_PIN, LED_CHANNEL_2_PIN,
 		LED_CHANNEL_3_PIN, LED_CHANNEL_4_PIN, LED_CHANNEL_5_PIN, LED_CHANNEL_6_PIN
 };
 
@@ -60,7 +60,7 @@ void led_process(uint32_t msticks) {
 	uint8_t i;
 	for(i=0; i < sizeof(led_map); i++) {
 		if (led_timeout[i] > 0) {
-			if (calc_diff(msticks, led_msticks[i]) > led_timeout[i]) {
+			if (math_calc_diff(msticks, led_msticks[i]) > led_timeout[i]) {
 				led_timeout[i] = 0;
 				led_msticks[i] = 0;
 				led_off(i);
