@@ -36,6 +36,7 @@
 #define PM_MODE_STAND_BY 3
 
 #define STAND_BY_TIMEOUT 9000 // 90 seconds
+#define AMP_OFF_TIMEOUT 3000 // 30 seconds
 
 
 extern volatile uint32_t UART1Count, UART2Count, UART3Count;
@@ -59,6 +60,7 @@ uint32_t last_check_volume = 0;
 uint32_t last_vs_health_check = 0;
 uint32_t last_1second_msticks = 0;
 uint32_t last_active_msticks = 0; // for auto power-off
+uint32_t last_going_standby_msticks = 0;
 
 uint8_t path[MAX_PATH_LENGTH];
 char current_playlist_name[MAX_PATH_LENGTH];
@@ -152,18 +154,24 @@ void command_vol_down() {
 }
 
 void command_go_standby() {
+	uart_sendStringln(USE_UART_PORT_NUM, "going stand by ...");
+	last_going_standby_msticks = msTicks;
 	pm_mode = PM_MODE_STAND_BY;
 	audio_pause();
 	led_off(LED_GREEN);
 	led_off(LED_BLUE);
 	led_on(LED_RED);
+	relay_reset(1); // lcd backlight off
 }
 
 void command_wake_up() {
+	uart_sendStringln(USE_UART_PORT_NUM, "waking up ...");
 	pm_mode = PM_MODE_ON;
 	led_off(LED_RED);
 	led_off(LED_BLUE);
 	led_on(LED_GREEN);
+	relay_set(1); // lcd backlight on
+	relay_set(0); // activate amp
 }
 
 uint8_t file_exists(char* name) {
@@ -307,6 +315,7 @@ int main(void) {
 
 	buttons_init();
 	relay_init();
+	relay_set(1); // lcd backlight
 
 	rotary_init();
 	rotary_set_boundary(0, 150);
@@ -380,7 +389,6 @@ int main(void) {
     uart_sendStringln(USE_UART_PORT_NUM, "activating amp ...");
 
 	relay_set(0);
-	relay_reset(1);
 
 	load_playlist("/index/boot.lst");
 	audio_pause();
@@ -503,6 +511,12 @@ int main(void) {
 			if (pm_mode == PM_MODE_ON && math_calc_diff(msTicks, last_active_msticks) > STAND_BY_TIMEOUT) {
 				command_go_standby();
 			}
+
+			if (pm_mode == PM_MODE_STAND_BY && math_calc_diff(msTicks, last_going_standby_msticks) > AMP_OFF_TIMEOUT) {
+				last_going_standby_msticks = msTicks; // to prevent fast toggle
+				relay_reset(0);
+			}
+
 		}
 
 		if (UART3Count > 0) {
