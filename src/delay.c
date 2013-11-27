@@ -2,7 +2,7 @@
 #include "stm32.h"
 #include "delay.h"
 
-#define APB1_PRESCALER 4            /* see system_stm32f4x  */
+#define APB1_PRESCALER 4            /* see system_stm32f4x  */ //  RCC->CFGR |= RCC_CFGR_PPRE1_DIV4;
 #define DELAY_TIM_FREQUENCY 10000   /* = 10KHZ -> timer runs in 100 microseconds */
 #define DELAY_TIM2_FREQUENCY 1000000   /* = 1MHZ -> timer runs in 1 microseconds */
 

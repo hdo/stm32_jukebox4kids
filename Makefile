@@ -48,16 +48,18 @@ OBJS = $(SRCS:.c=.o)
 
 .PHONY: lib proj
 
-all: lib proj
+all: lib proj 
 	$(SIZE) $(OUTPATH)/$(PROJ_NAME).elf
 
 lib:
 	$(MAKE) -C lib FLOAT_TYPE=$(FLOAT_TYPE)
 
-proj: 	$(OUTPATH)/$(PROJ_NAME).elf
+proj: prepare $(OUTPATH)/$(PROJ_NAME).elf
+	
 
 $(OUTPATH)/$(PROJ_NAME).elf: $(SRCS)
-	mkdir -p $(OUTPATH)
+	mkdir -p $(OUTPATH)	
+	bash ./scripts/setbuildid.script
 	$(CC) $(CFLAGS) $^ -o $@ $(LIBPATHS) $(LIBS)
 	$(OBJCOPY) -O ihex $(OUTPATH)/$(PROJ_NAME).elf $(OUTPATH)/$(PROJ_NAME).hex
 	$(OBJCOPY) -O binary $(OUTPATH)/$(PROJ_NAME).elf $(OUTPATH)/$(PROJ_NAME).bin
@@ -67,6 +69,11 @@ flash: all
 
 cleanlibs:
 	$(MAKE) clean -C lib # Remove this line if you don't want to clean the libs as well
+
+prepare:
+	rm -f $(OUTPATH)/$(PROJ_NAME).elf
+	rm -f $(OUTPATH)/$(PROJ_NAME).hex
+	rm -f $(OUTPATH)/$(PROJ_NAME).bin
 	
 clean:
 	rm -f *.o
