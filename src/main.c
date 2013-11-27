@@ -17,6 +17,7 @@
 #include "relay.h"
 #include "ff.h"
 #include "audio.h"
+#include "led.h"
 
 #define PERFORM_VS_HEALTH_CHECK 0
 #define PERFORM_VS_SOFT_RESET_ON_TRACK_CHANGE 0 // for vs1003
@@ -377,6 +378,7 @@ int main(void) {
 		audio_process(msTicks);
 		buttons_process(msTicks);
 		lcdfront_process(msTicks);
+		led_process(msTicks);
 
 		uint8_t audio_status = audio_get_status();
 
