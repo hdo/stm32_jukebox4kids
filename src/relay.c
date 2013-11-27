@@ -3,6 +3,8 @@
 #include "relay.h"
 #include "math_utils.h"
 
+#define RELAY_COUNT 2
+
 uint16_t relay_map[] = { RELAY_CHANNEL_0_PIN, RELAY_CHANNEL_1_PIN };
 
 void relay_init(void) {
@@ -25,13 +27,13 @@ void relay_process(uint32_t msticks) {
 }
 
 void relay_reset(uint8_t channel) {
-	if (channel < sizeof(relay_map)) {
+	if (channel < RELAY_COUNT) {
 		GPIO_SetBits(RELAY_GPIO_PORT, relay_map[channel]);
 	}
 }
 
 void relay_set(uint8_t channel) {
-	if (channel < sizeof(relay_map)) {
+	if (channel < RELAY_COUNT) {
 		GPIO_ResetBits(RELAY_GPIO_PORT, relay_map[channel]);
 	}
 }

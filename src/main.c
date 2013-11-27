@@ -194,6 +194,7 @@ void load_playlist(char* lstName) {
 		FIL lstFile;
 		if (f_open(&lstFile, lstName, FA_OPEN_EXISTING | FA_READ) == FR_OK) {
 			uart_sendStringln(USE_UART_PORT_NUM, "lst file successfully opened");
+			led_signal(LED_BLUE, 70);
 			uint32_t current_read = 0;
 			uint16_t total_read = 0;
 			do {
@@ -237,15 +238,18 @@ void load_playlist(char* lstName) {
 			}
 			else {
 				uart_sendStringln(USE_UART_PORT_NUM, "ERROR: empty lst file!");
+				led_signal(LED_RED, 70);
 			}
 		}
 		else {
 			// error loading playlist file
-			uart_sendString(USE_UART_PORT_NUM, "ERROR: file not found!");
+			uart_sendStringln(USE_UART_PORT_NUM, "ERROR: file not found!");
+			led_signal(LED_RED, 70);
 		}
 	}
 	else {
 		uart_sendStringln(USE_UART_PORT_NUM, "ERROR: lstName == 0 ?");
+		led_signal(LED_RED, 70);
 	}
 }
 
@@ -486,7 +490,6 @@ int main(void) {
 				uart_sendNumberln(USE_UART_PORT_NUM, rdm630_read_rfid_id());
 				load_playlist_for_rfid(rdm630_read_rfid_id());
 				rdm630_reset();
-				led_signal(LED_BLUE, 50);
 			}
 		}
 
