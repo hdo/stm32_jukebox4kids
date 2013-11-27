@@ -2,7 +2,6 @@ include ./Makefile.common
 
 # Sources
 SRCS = buttons.c lcdfront.c math_utils.c relay.c uart.c buzzer.c logger.c numpad.c rotary.c version.c delay.c lst_handler.c queue.c vs1033.c lcd.c main.c rdm630.c system_stm32f4xx.c stm32f4xx_it.c syscalls.c usb_bsp.c usbh_usr.c audio.c
-#SRCS = $(wildcard *.c)
 
 # Project name
 PROJ_NAME=stm32F4_jukebox
@@ -25,11 +24,9 @@ LIBPATHS = -Llib/STM32F4xx_StdPeriph_Driver
 LIBPATHS += -Llib/USB_OTG
 LIBPATHS += -Llib/USB_Host/Core -Llib/USB_Host/Class/MSC
 LIBPATHS += -Llib/fat_fs
-#LIBPATHS += -Llib/fatfs
 
 # Libraries to link
 LIBS = -lm -lfatfs -lstdperiph -lusbhostcore -lusbhostmsc -lusbcore
-#LIBS = -lm -lfatfs -lstdperiph
 
 # Extra includes
 CFLAGS += -Ilib/STM32F4xx_StdPeriph_Driver/inc
@@ -37,7 +34,6 @@ CFLAGS += -Ilib/USB_OTG/inc
 CFLAGS += -Ilib/USB_Host/Core/inc
 CFLAGS += -Ilib/USB_Host/Class/MSC/inc
 CFLAGS += -Ilib/fat_fs/inc
-#CFLAGS += -Ilib/fatfs -Ilib/fatfs/lo_level_ub
 
 # add startup file to build
 SRCS += lib/startup_stm32f40xx.s
