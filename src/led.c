@@ -1,8 +1,5 @@
-#include <stdint.h>
-#include "stm32.h"
 #include "led.h"
 #include "math_utils.h"
-#include "uart.h"
 
 #define LED_COUNT 7
 
