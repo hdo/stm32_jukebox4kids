@@ -162,6 +162,8 @@ void command_go_standby() {
 	led_off(LED_BLUE);
 	led_on(LED_RED);
 	relay_reset(1); // lcd backlight off
+	lcdfront_set_blink(0);
+	lcdfront_set_display(0);
 }
 
 void command_wake_up() {
@@ -172,6 +174,9 @@ void command_wake_up() {
 	led_on(LED_GREEN);
 	relay_set(1); // lcd backlight on
 	relay_set(0); // activate amp
+	lcdfront_set_display(1);
+	// reset inbut buffer (rfid)
+	UART1Count = 0;
 }
 
 uint8_t file_exists(char* name) {
@@ -506,6 +511,13 @@ int main(void) {
 			last_1second_msticks = msTicks;
 			if (audio_status == AUDIO_STATUS_PLAYING) {
 				last_active_msticks = msTicks;
+			}
+
+			if (audio_status == AUDIO_STATUS_PAUSED) {
+				lcdfront_set_blink(1);
+			}
+			else {
+				lcdfront_set_blink(0);
 			}
 
 			if (pm_mode == PM_MODE_ON && math_calc_diff(msTicks, last_active_msticks) > STAND_BY_TIMEOUT) {
